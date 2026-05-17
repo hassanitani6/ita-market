@@ -9,10 +9,20 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-<!-- Google Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&family=Playfair+Display:wght@400;700&family=Special+Elite&family=Libre+Bodoni:wght@400;700&family=Yeseva+One&family=Arapey&family=Satisfy&family=Grand+Hotel&family=Barlow:wght@400;700&family=Lancelot&family=Old+Standard+TT:wght@400;700&family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: 'Arima Madurai';  src: url('../fonts/arima-madurai.ttf'); }
+  @font-face { font-family: 'Playfair Display'; src: url('../fonts/playfair-display.ttf'); }
+  @font-face { font-family: 'Telegraf';        src: url('../fonts/telegraf.otf'); }
+  @font-face { font-family: 'Bodoni MT';       src: url('../fonts/bodoni-mt.ttf'); }
+  @font-face { font-family: 'Yeseva One';      src: url('../fonts/yeseva-one.ttf'); }
+  @font-face { font-family: 'Arapey';          src: url('../fonts/arapey.ttf'); }
+  @font-face { font-family: 'Apricot';         src: url('../fonts/apricot.otf'); }
+  @font-face { font-family: 'Grand Hotel';     src: url('../fonts/grand-hotel.ttf'); }
+  @font-face { font-family: 'TT Drugs Trial';  src: url('../fonts/tt-drugs-trial.otf'); }
+  @font-face { font-family: 'Lancelot';        src: url('../fonts/lancelot.ttf'); }
+  @font-face { font-family: 'Old Standard TT'; src: url('../fonts/old-standard-tt.ttf'); }
+  @font-face { font-family: 'Quicksand';       src: url('../fonts/quicksand.ttf'); }
+</style>
 
 <style>
   :root {
@@ -451,18 +461,18 @@ const FIREBASE_CONFIG = {
 
 // ── Fonts (must match customer form exactly) ──────────────────────────────────
 const FONTS = [
-  { id:'arimo',           label:'Arimon',           webCSS:"'Arimo', sans-serif",        svgFamily:'Arimo' },
-  { id:'playfair',        label:'Playfair Display',  webCSS:"'Playfair Display', serif",  svgFamily:'Playfair Display' },
-  { id:'special-elite',   label:'Telegraph',         webCSS:"'Special Elite', cursive",   svgFamily:'Special Elite' },
-  { id:'libre-bodoni',    label:'Bodoni FLF',        webCSS:"'Libre Bodoni', serif",      svgFamily:'Libre Bodoni' },
-  { id:'yeseva',          label:'Yeseva One',        webCSS:"'Yeseva One', cursive",      svgFamily:'Yeseva One' },
-  { id:'arapey',          label:'Arapey',            webCSS:"'Arapey', serif",            svgFamily:'Arapey' },
-  { id:'satisfy',         label:'Apricots',          webCSS:"'Satisfy', cursive",         svgFamily:'Satisfy' },
-  { id:'grand-hotel',     label:'Grand Hotel',       webCSS:"'Grand Hotel', cursive",     svgFamily:'Grand Hotel' },
-  { id:'barlow',          label:'TT Drugs',          webCSS:"'Barlow', sans-serif",       svgFamily:'Barlow' },
-  { id:'lancelot',        label:'Lancelot',          webCSS:"'Lancelot', cursive",        svgFamily:'Lancelot' },
-  { id:'old-standard',    label:'Old Standard',      webCSS:"'Old Standard TT', serif",  svgFamily:'Old Standard TT' },
-  { id:'quicksand',       label:'Quick Sand',        webCSS:"'Quicksand', sans-serif",    svgFamily:'Quicksand' },
+  { id:'arima-madurai',    label:'Arimon',           webCSS:"'Arima Madurai', serif",      svgFamily:'Arima Madurai' },
+  { id:'playfair-display', label:'Playfair Display', webCSS:"'Playfair Display', serif",   svgFamily:'Playfair Display' },
+  { id:'telegraf',         label:'Telegraph',        webCSS:"'Telegraf', sans-serif",      svgFamily:'Telegraf' },
+  { id:'bodoni-mt',        label:'Bodoni FLF',       webCSS:"'Bodoni MT', serif",          svgFamily:'Bodoni MT' },
+  { id:'yeseva-one',       label:'Yeseva One',       webCSS:"'Yeseva One', cursive",       svgFamily:'Yeseva One' },
+  { id:'arapey',           label:'Arapey',           webCSS:"'Arapey', serif",             svgFamily:'Arapey' },
+  { id:'apricot',          label:'Apricots',         webCSS:"'Apricot', cursive",          svgFamily:'Apricot' },
+  { id:'grand-hotel',      label:'Grand Hotel',      webCSS:"'Grand Hotel', cursive",      svgFamily:'Grand Hotel' },
+  { id:'tt-drugs-trial',   label:'TT Drugs',         webCSS:"'TT Drugs Trial', sans-serif", svgFamily:'TT Drugs Trial' },
+  { id:'lancelot',         label:'Lancelot',         webCSS:"'Lancelot', cursive",         svgFamily:'Lancelot' },
+  { id:'old-standard-tt',  label:'Old Standard',     webCSS:"'Old Standard TT', serif",   svgFamily:'Old Standard TT' },
+  { id:'quicksand',        label:'Quick Sand',       webCSS:"'Quicksand', sans-serif",     svgFamily:'Quicksand' },
 ];
 
 // ── Colour hex map ────────────────────────────────────────────────────────────
