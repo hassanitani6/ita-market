@@ -297,6 +297,7 @@ const COLOUR_HEX = {
   'Navy':'#1a237e','Dark Blue':'#0d47a1','Blue':'#1565c0','Green':'#2e7d32',
   'White':'#f5f5f5','Grey':'#757575','Orange':'#e65100',
   'Natural':'#d4b896','Natural Slate':'#4a4a5a','Natural Wood':'#c4955a',
+  'Light Blue':'#90caf9','Natural Cork':'#c8a96e',
 };
 
 const state = {
@@ -338,10 +339,13 @@ async function loadProducts() {
 // ── Shape-based product preview ───────────────────────────────────────────────
 const SHAPE_FOR = {
   'heart-keychain':'heart',
+  'mini-heart-keychain':'heart',
   'heart-lip-balm':'lipbalm',
   'circle-keychain':'circle',
   'cat-paw-organizer':'paw',
   'luggage-tag':'tag',
+  'slate-coaster':'circle',
+  'cork-coaster':'circle',
 };
 function shapeOf(id) { return SHAPE_FOR[id] || 'rect'; }
 
