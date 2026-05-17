@@ -377,25 +377,30 @@ function shapeSVG(productId, area, colour, text, font, fillOverride, inkOverride
   }
 
   if (sf === 'paw') {
-    // Strap 85×20mm — paw ends on left & right, text engraves along middle strap
-    // viewBox 130×34 proportional to actual product dimensions
+    // Strap 85×20mm — paw ends face OUTWARD (left toes point left, right toes point right)
+    // viewBox 144×34: strap body 28–116, paw pads at cx=28 & cx=116, toes extend to x=8 & x=136
     const fs = Math.min(8, (72*0.82)/(chars*0.55)).toFixed(1);
-    const pawEnd = (cx) => {
-      // 4 toe circles in an arc above the main oval pad
-      const tl = cx - 9, tc = cx - 3, tr = cx + 3, trr = cx + 9;
-      return `<circle cx="${tl}"  cy="9"  r="3.5" fill="${fill}"/>
-  <circle cx="${tc}"  cy="5"  r="3.5" fill="${fill}"/>
-  <circle cx="${tr}"  cy="5"  r="3.5" fill="${fill}"/>
-  <circle cx="${trr}" cy="9"  r="3.5" fill="${fill}"/>
-  <ellipse cx="${cx}" cy="19" rx="11" ry="13" fill="${fill}"/>
-  <circle  cx="${cx}" cy="19" r="4.2" fill="rgba(0,0,0,0.18)"/>
-  <circle  cx="${cx}" cy="19" r="2.5" fill="rgba(210,165,40,0.82)"/>`;
-    };
-    return `<svg viewBox="0 0 130 34" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-  ${pawEnd(15)}
-  <rect x="26" y="10" width="78" height="14" rx="3" fill="${fill}"/>
-  ${pawEnd(115)}
-  ${svgText(65, 17, fs, font, ink, text)}
+    // Left paw: pad at (28,17), 3 toes pointing LEFT
+    const leftPaw = `
+  <ellipse cx="28" cy="17" rx="10" ry="12" fill="${fill}"/>
+  <circle cx="10" cy="10" r="4" fill="${fill}"/>
+  <circle cx="8"  cy="17" r="4" fill="${fill}"/>
+  <circle cx="10" cy="24" r="4" fill="${fill}"/>
+  <circle cx="28" cy="17" r="4.2" fill="rgba(0,0,0,0.18)"/>
+  <circle cx="28" cy="17" r="2.5" fill="rgba(210,165,40,0.82)"/>`;
+    // Right paw: pad at (116,17), 3 toes pointing RIGHT
+    const rightPaw = `
+  <ellipse cx="116" cy="17" rx="10" ry="12" fill="${fill}"/>
+  <circle cx="134" cy="10" r="4" fill="${fill}"/>
+  <circle cx="136" cy="17" r="4" fill="${fill}"/>
+  <circle cx="134" cy="24" r="4" fill="${fill}"/>
+  <circle cx="116" cy="17" r="4.2" fill="rgba(0,0,0,0.18)"/>
+  <circle cx="116" cy="17" r="2.5" fill="rgba(210,165,40,0.82)"/>`;
+    return `<svg viewBox="0 0 144 34" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <rect x="28" y="11" width="88" height="12" rx="3" fill="${fill}"/>
+  ${leftPaw}
+  ${rightPaw}
+  ${svgText(72, 17, fs, font, ink, text)}
 </svg>`;
   }
 
