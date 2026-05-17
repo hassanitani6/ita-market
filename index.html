@@ -82,12 +82,17 @@
     .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .product-tile {
       background: var(--card); border: 2px solid var(--border); border-radius: var(--radius);
-      padding: 18px 12px; cursor: pointer; text-align: center;
-      min-height: 80px; display: flex; align-items: center; justify-content: center;
+      padding: 12px 10px 14px; cursor: pointer; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 9px;
       transition: all 0.15s;
     }
     .product-tile.selected { border-color: var(--accent); background: var(--accent); color: white; }
-    .product-tile-name { font-size: 13px; font-weight: 600; line-height: 1.35; }
+    .product-tile-name { font-size: 12px; font-weight: 600; line-height: 1.35; }
+    .tile-svg-wrap { width: 100%; border-radius: 6px; overflow: hidden; line-height: 0; }
+    .tile-svg-wrap svg { width: 100%; height: auto; max-height: 64px; display: block; }
+
+    .engrave-preview-wrap { margin: 14px 0 4px; border-radius: 8px; overflow: hidden; line-height: 0; border: 1.5px solid #d4b896; }
+    .engrave-preview-wrap svg { width: 100%; height: auto; max-height: 110px; display: block; }
 
     .colour-grid { display: flex; flex-wrap: wrap; gap: 12px; }
     .colour-swatch { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
@@ -203,6 +208,9 @@
       <span id="optBadge"></span>
       <span><span class="char-count" id="charCount">0</span> / <span id="charLimit">15</span></span>
     </div>
+    <div id="engravePreviewWrap" class="engrave-preview-wrap" style="display:none">
+      <div id="engravePreview"></div>
+    </div>
     <div id="fontSection" style="display:none">
       <div class="font-section-label">Choose a font</div>
       <div class="font-grid" id="fontGrid"></div>
@@ -311,11 +319,28 @@ async function loadProducts() {
   }
 }
 
+function buildTilePreview(p) {
+  const { w, h } = p.engravingArea || { w:50, h:25 };
+  const sample = 'Your Name';
+  const fs = Math.max(Math.min(h * 0.55, (w * 0.85) / (sample.length * 0.55)), 1.5).toFixed(1);
+  return `<div class="tile-svg-wrap">
+    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <rect class="bg" x="0" y="0" width="${w}" height="${h}" fill="#ede5d8"/>
+      <text x="${w/2}" y="${h/2}" dominant-baseline="middle" text-anchor="middle"
+        font-family="'Arima Madurai',serif" font-size="${fs}" fill="#6b4226" opacity="0.8"
+      >${sample}</text>
+    </svg>
+  </div>`;
+}
+
 function renderProductGrid() {
-  const sorted = Object.entries(state.products).sort((a,b) => (a[1].order||99)-(b[1].order||99));
+  const sorted = Object.entries(state.products)
+    .filter(([,p]) => !p.disabled)
+    .sort((a,b) => (a[1].order||99)-(b[1].order||99));
   document.getElementById('productGrid').innerHTML =
     `<div class="product-grid">${sorted.map(([id,p]) =>
       `<div class="product-tile${state.productId===id?' selected':''}" onclick="selectProduct('${id}')">
+         ${buildTilePreview(p)}
          <span class="product-tile-name">${escH(p.name)}</span>
        </div>`
     ).join('')}</div>`;
@@ -356,6 +381,24 @@ function selectColour(c) {
   setTimeout(() => goToStep(4), 220);
 }
 
+function updateEngravePreview() {
+  const text = state.text.trim();
+  const wrap = document.getElementById('engravePreviewWrap');
+  const el   = document.getElementById('engravePreview');
+  if (!text) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const { w, h } = state.productEngravingArea || { w:50, h:25 };
+  const font = state.fontWebCSS || "'Arima Madurai', serif";
+  const charCount = Math.max(text.length, 1);
+  const fs = Math.max(Math.min(h * 0.72, (w * 0.88) / (charCount * 0.55)), 2).toFixed(2);
+  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${w}" height="${h}" fill="#f5ede0"/>
+    <text x="${w/2}" y="${h/2}" dominant-baseline="middle" text-anchor="middle"
+      font-family="${font}" font-size="${fs}" fill="#2d1a0a"
+    >${escH(text)}</text>
+  </svg>`;
+}
+
 function setupStep4() {
   const limit = state.productMaxChars;
   const req = state.productTextRequired;
@@ -369,6 +412,7 @@ function setupStep4() {
   document.getElementById('optBadge').innerHTML = req ? '' : '<span class="optional-badge">optional</span>';
   document.getElementById('fontSection').style.display = state.text.length > 0 ? 'block' : 'none';
   renderFontGrid();
+  updateEngravePreview();
   checkStep4();
   setTimeout(() => document.getElementById('textInput').focus(), 320);
 }
@@ -387,6 +431,7 @@ function selectFont(id) {
   const f = FONTS.find(x => x.id === id);
   Object.assign(state, { fontId:f.id, fontLabel:f.label, fontWebCSS:f.webCSS, fontSvgFamily:f.svgFamily });
   renderFontGrid();
+  updateEngravePreview();
   checkStep4();
 }
 
@@ -540,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fs = document.getElementById('fontSection');
     fs.style.display = n > 0 ? 'block' : 'none';
     if (n > 0) renderFontGrid();
+    updateEngravePreview();
     checkStep4();
   });
 });
