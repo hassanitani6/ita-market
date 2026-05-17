@@ -14,18 +14,19 @@ except ImportError:
     sys.exit("Missing deps — run: pip3 install rembg onnxruntime Pillow")
 
 ICLOUD  = Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/ITA Prints/Photos"
+KARIM   = Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/ITA Prints/Karim/Photos"
 OUTPUT  = Path(__file__).parent / "images"
 OUTPUT.mkdir(exist_ok=True)
 
 PHOTOS = {
     'leather-keychain':       ICLOUD / "Small leather keychains/IMG_1138.JPG",
-    'custom-leather-keychain':ICLOUD / "Small leather keychains/IMG_1144.JPG",
-    'heart-keychain':         ICLOUD / "Heart Mirrors/IMG_4650.JPG",
-    'mini-heart-keychain':    ICLOUD / "Heart Mirrors/IMG_4651.JPG",
+    'custom-leather-keychain':KARIM  / "Leather Keychain/IMG_3191.jpg",
+    'heart-keychain':         ICLOUD / "Heart Mirrors/IMG_4705.jpg",
+    'mini-heart-keychain':    ICLOUD / "Heart Mirrors/IMG_4733.JPG",
     'circle-keychain':        ICLOUD / "Circle Mirrors/IMG_5119.JPG",
     'cat-paw-organizer':      ICLOUD / "Cable Holders/Closer up.jpg",
-    'heart-lip-balm':         ICLOUD / "Lip palm holder/IMG_4662.JPG",
-    'lip-balm-bag-charm':     ICLOUD / "Lip palm holder/IMG_4991.jpg",
+    'heart-lip-balm':         ICLOUD / "Lip palm holder/IMG_4903.JPG",
+    'lip-balm-bag-charm':     ICLOUD / "Lip palm holder/IMG_4915.JPG",
     'slim-wallet':            ICLOUD / "Wallets/IMG_4792.JPG",
     'luggage-tag':            ICLOUD / "Luggage tags/IMG_4571.jpg",
     'slate-coaster':          ICLOUD / "Coasters/Slate Coasters.jpg",
