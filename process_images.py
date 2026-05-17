@@ -14,18 +14,19 @@ except ImportError:
     sys.exit("Missing deps — run: pip3 install rembg onnxruntime Pillow")
 
 PHOTOS  = Path("photos")
+PHOTOS   = Path("photos")
 OUTPUT  = Path(__file__).parent / "images"
 OUTPUT.mkdir(exist_ok=True)
 
 PHOTOS = {
     'leather-keychain':       PHOTOS / "Small leather keychains/IMG_1138.JPG",
-    'custom-leather-keychain':PHOTOS / "Small leather keychains/IMG_1144.JPG",
-    'heart-keychain':         PHOTOS / "Heart Mirrors/IMG_4650.JPG",
-    'mini-heart-keychain':    PHOTOS / "Heart Mirrors/IMG_4651.JPG",
+    'custom-leather-keychain':PHOTOS  / "Leather Keychain/IMG_3191.jpg",
+    'heart-keychain':         PHOTOS / "Heart Mirrors/IMG_4705.jpg",
+    'mini-heart-keychain':    PHOTOS / "Heart Mirrors/IMG_4733.JPG",
     'circle-keychain':        PHOTOS / "Circle Mirrors/IMG_5119.JPG",
     'cat-paw-organizer':      PHOTOS / "Cable Holders/Closer up.jpg",
-    'heart-lip-balm':         PHOTOS / "Lip palm holder/IMG_4662.JPG",
-    'lip-balm-bag-charm':     PHOTOS / "Lip palm holder/IMG_4991.jpg",
+    'heart-lip-balm':         PHOTOS / "Lip palm holder/IMG_4903.JPG",
+    'lip-balm-bag-charm':     PHOTOS / "Lip palm holder/IMG_4915.JPG",
     'slim-wallet':            PHOTOS / "Wallets/IMG_4792.JPG",
     'luggage-tag':            PHOTOS / "Luggage tags/IMG_4571.jpg",
     'slate-coaster':          PHOTOS / "Coasters/Slate Coasters.jpg",
