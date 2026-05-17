@@ -263,18 +263,43 @@
     padding: 12px 14px;
     margin-bottom: 10px;
     display: flex; align-items: center; gap: 12px;
+    transition: opacity .2s;
   }
+  .product-item.paused { opacity: .5; }
+  .product-item.editing { border-color: var(--accent); }
   .product-item-name { font-weight: 700; flex: 1; }
   .product-item-chars { font-size: .8rem; color: var(--text2); }
+  .paused-badge {
+    font-size: .7rem; font-weight: 700; background: #3f3f46;
+    color: #a1a1aa; padding: 2px 7px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
   .colour-chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .colour-chip {
     width: 16px; height: 16px; border-radius: 50%;
     border: 1px solid rgba(255,255,255,.2);
   }
+  .product-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-edit-product {
+    background: none; border: 1px solid var(--accent); color: var(--accent);
+    border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: .8rem;
+  }
+  .btn-toggle-product {
+    background: none; border: 1px solid var(--border); color: var(--text2);
+    border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: .8rem;
+  }
+  .btn-toggle-product:hover { border-color: var(--text2); color: var(--text); }
   .btn-delete-product {
     background: none; border: 1px solid var(--red); color: var(--red);
     border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: .8rem;
   }
+  .btn-cancel-edit {
+    background: none; border: 1px solid var(--border); color: var(--text2);
+    border-radius: 8px; padding: 11px 20px; cursor: pointer; font-size: .9rem;
+    display: none;
+  }
+  .btn-cancel-edit.visible { display: inline-block; }
+  .colour-warn { font-size: .78rem; color: #f59e0b; margin-top: 4px; display: none; }
   .add-product-form {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -370,7 +395,7 @@
     <div class="product-list" id="product-list"></div>
 
     <div class="add-product-form">
-      <h3>Add Product</h3>
+      <h3 id="form-title">Add Product</h3>
       <div class="form-row">
         <label>Product name</label>
         <input type="text" id="new-name" placeholder="e.g. Circle Leather Keychain">
@@ -391,6 +416,7 @@
       <div class="form-row">
         <label>Colours available (one per line or comma-separated)</label>
         <textarea id="new-colors" placeholder="Black&#10;Red&#10;Pink&#10;Navy"></textarea>
+        <p class="colour-warn" id="colour-warn"></p>
       </div>
       <div class="form-row">
         <div class="text-required-row">
@@ -400,6 +426,7 @@
       </div>
       <div class="btn-row">
         <button class="btn-save" id="btn-add-product">Add Product</button>
+        <button class="btn-cancel-edit" id="btn-cancel-edit">Cancel</button>
         <button class="btn-load-defaults" id="btn-load-defaults">Load ItaPrints Defaults</button>
       </div>
       <p class="save-status" id="save-status"></p>
@@ -489,22 +516,29 @@ function formatElapsed(ms) {
 // ── SVG generation ────────────────────────────────────────────────────────────
 function buildSVG(item, ticket, customerName) {
   const { w, h } = item.engravingArea || { w:50, h:25 };
-  const text    = item.text || '';
-  const font    = item.fontSvgFamily || 'Arial';
-  const fs      = Math.min(h * 0.55, w * 0.18, 14);
+  const text = (item.text || '').replace(/[\r\n]+/g,' ').trim();
+  const font = item.fontSvgFamily || 'Arial';
+
+  // Fit text within 88% of width and 72% of height
+  // 0.55 is the average advance-width ratio per character across serif/script fonts
+  const charCount  = Math.max(text.length, 1);
+  const fsByHeight = h * 0.72;
+  const fsByWidth  = (w * 0.88) / (charCount * 0.55);
+  const fs         = Math.max(Math.min(fsByHeight, fsByWidth), 2).toFixed(2);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg"
      width="${w}mm" height="${h}mm"
-     viewBox="0 0 ${w} ${h}">
+     viewBox="0 0 ${w} ${h}"
+     overflow="hidden">
   <text
-    x="${w/2}" y="${h/2}"
+    x="${w / 2}" y="${h / 2}"
     dominant-baseline="middle"
     text-anchor="middle"
     font-family="${font}"
     font-size="${fs}"
     fill="#000000"
-  >${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</text>
+  >${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}</text>
 </svg>`;
 }
 
@@ -730,6 +764,8 @@ document.getElementById('banner-done-btn').addEventListener('click', () => {
 });
 
 // ── Products tab ──────────────────────────────────────────────────────────────
+let editingId = null;
+
 function renderProducts() {
   const list = document.getElementById('product-list');
   const entries = Object.entries(products).sort(([,a],[,b]) => (a.order||99)-(b.order||99));
@@ -743,21 +779,85 @@ function renderProducts() {
     const chips = (p.colors||[]).map(c =>
       `<span class="colour-chip" style="background:${COLOUR_HEX[c]||'#888'};" title="${c}"></span>`
     ).join('');
+    const paused = !!p.disabled;
     return `
-    <div class="product-item">
-      <div class="product-item-name">${p.name}</div>
+    <div class="product-item${paused ? ' paused' : ''}${editingId===id ? ' editing' : ''}">
+      <div class="product-item-name">${p.name}${paused ? ' <span class="paused-badge">Paused</span>' : ''}</div>
       <div class="product-item-chars">${p.maxChars} chars · ${p.engravingArea?.w}×${p.engravingArea?.h}mm</div>
       <div class="colour-chips">${chips}</div>
-      <button class="btn-delete-product" onclick="deleteProduct('${id}')">Delete</button>
+      <div class="product-actions">
+        <button class="btn-edit-product" onclick="editProduct('${id}')">Edit</button>
+        <button class="btn-toggle-product" onclick="toggleProduct('${id}')">${paused ? 'Resume' : 'Pause'}</button>
+        <button class="btn-delete-product" onclick="deleteProduct('${id}')">Delete</button>
+      </div>
     </div>`;
   }).join('');
 }
 
+function editProduct(id) {
+  const p = products[id];
+  if (!p) return;
+  editingId = id;
+
+  document.getElementById('new-name').value         = p.name;
+  document.getElementById('new-maxchars').value      = p.maxChars;
+  document.getElementById('new-area-w').value        = p.engravingArea?.w || 50;
+  document.getElementById('new-area-h').value        = p.engravingArea?.h || 25;
+  document.getElementById('new-colors').value        = (p.colors||[]).join('\n');
+  document.getElementById('new-text-required').checked = !!p.textRequired;
+  document.getElementById('form-title').textContent  = 'Edit Product';
+  document.getElementById('btn-add-product').textContent = 'Save Changes';
+  document.getElementById('btn-cancel-edit').classList.add('visible');
+  document.getElementById('save-status').textContent = '';
+  document.querySelector('.add-product-form').scrollIntoView({ behavior:'smooth' });
+  renderProducts();
+}
+
+function cancelEdit() {
+  editingId = null;
+  document.getElementById('new-name').value          = '';
+  document.getElementById('new-colors').value        = '';
+  document.getElementById('new-maxchars').value      = '12';
+  document.getElementById('new-area-w').value        = '50';
+  document.getElementById('new-area-h').value        = '25';
+  document.getElementById('new-text-required').checked = true;
+  document.getElementById('form-title').textContent  = 'Add Product';
+  document.getElementById('btn-add-product').textContent = 'Add Product';
+  document.getElementById('btn-cancel-edit').classList.remove('visible');
+  document.getElementById('colour-warn').style.display = 'none';
+  renderProducts();
+}
+
+async function toggleProduct(id) {
+  const p = products[id];
+  if (!p) return;
+  await db.ref(`/products/${id}/disabled`).set(!p.disabled);
+  toast(p.disabled ? `"${p.name}" resumed` : `"${p.name}" paused`);
+}
+
 async function deleteProduct(id) {
-  if (!confirm(`Delete "${products[id]?.name}"?`)) return;
+  if (!confirm(`Delete "${products[id]?.name}"? This cannot be undone.`)) return;
+  if (editingId === id) cancelEdit();
   await db.ref(`/products/${id}`).remove();
   toast('Product deleted');
 }
+
+function validateColours(raw) {
+  const entered = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+  const unknown = entered.filter(c => !COLOUR_HEX[c]);
+  const warnEl  = document.getElementById('colour-warn');
+  if (unknown.length) {
+    warnEl.textContent = `Unknown colour name${unknown.length>1?'s':''}: ${unknown.join(', ')} — check spelling or add to COLOUR_HEX`;
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
+  return entered;
+}
+
+document.getElementById('new-colors').addEventListener('input', function() {
+  validateColours(this.value);
+});
 
 document.getElementById('btn-add-product').addEventListener('click', async () => {
   const name     = document.getElementById('new-name').value.trim();
@@ -769,36 +869,46 @@ document.getElementById('btn-add-product').addEventListener('click', async () =>
 
   if (!name) { toast('Please enter a product name'); return; }
 
-  const colors = colorsRaw
-    .split(/[\n,]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-  const order = Object.keys(products).length + 1;
-
+  const colors   = validateColours(colorsRaw);
   const statusEl = document.getElementById('save-status');
   statusEl.textContent = 'Saving…';
 
-  await db.ref(`/products/${slug}`).set({
-    name, maxChars, engravingArea:{w:areaW,h:areaH}, textRequired:textReq, order, colors
-  });
-
-  // Clear form
-  document.getElementById('new-name').value    = '';
-  document.getElementById('new-colors').value  = '';
-  document.getElementById('new-maxchars').value = '12';
-  document.getElementById('new-area-w').value  = '50';
-  document.getElementById('new-area-h').value  = '25';
-  document.getElementById('new-text-required').checked = true;
-
-  statusEl.textContent = '✓ Saved!';
-  setTimeout(() => statusEl.textContent = '', 3000);
-  toast(`"${name}" added`);
+  if (editingId) {
+    // Update existing product — preserve order and disabled state
+    const existing = products[editingId] || {};
+    await db.ref(`/products/${editingId}`).update({
+      name, maxChars, engravingArea:{w:areaW,h:areaH}, textRequired:textReq, colors,
+      order: existing.order || 99,
+      disabled: existing.disabled || false,
+    });
+    statusEl.textContent = '✓ Updated!';
+    setTimeout(() => { statusEl.textContent = ''; cancelEdit(); }, 1500);
+    toast(`"${name}" updated`);
+  } else {
+    const slug  = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    const order = Object.keys(products).length + 1;
+    await db.ref(`/products/${slug}`).set({
+      name, maxChars, engravingArea:{w:areaW,h:areaH}, textRequired:textReq, order,
+      disabled: false, colors,
+    });
+    document.getElementById('new-name').value         = '';
+    document.getElementById('new-colors').value       = '';
+    document.getElementById('new-maxchars').value     = '12';
+    document.getElementById('new-area-w').value       = '50';
+    document.getElementById('new-area-h').value       = '25';
+    document.getElementById('new-text-required').checked = true;
+    document.getElementById('colour-warn').style.display = 'none';
+    statusEl.textContent = '✓ Saved!';
+    setTimeout(() => statusEl.textContent = '', 3000);
+    toast(`"${name}" added`);
+  }
 });
+
+document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
 
 document.getElementById('btn-load-defaults').addEventListener('click', async () => {
   if (!confirm('This will overwrite any existing products with the ItaPrints defaults. Continue?')) return;
+  if (editingId) cancelEdit();
   const statusEl = document.getElementById('save-status');
   statusEl.textContent = 'Loading defaults…';
   await db.ref('/products').set(DEFAULT_PRODUCTS);
