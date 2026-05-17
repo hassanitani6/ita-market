@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITA Prints — Operator</title>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&family=Playfair+Display:wght@400;700&family=Special+Elite&family=Libre+Bodoni:wght@400;700&family=Yeseva+One&family=Arapey&family=Satisfy&family=Grand+Hotel&family=Barlow:wght@400;700&family=Lancelot&family=Old+Standard+TT:wght@400;700&family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #333;
+    --text: #f0f0f0;
+    --text2: #999;
+    --accent: #e8a020;
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --engraving-bg: #16a34a20;
+    --engraving-border: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Pin gate ── */
+  #pin-gate {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+    flex-direction: column; gap: 16px;
+  }
+  #pin-gate h2 { font-size: 1.4rem; color: var(--accent); }
+  #pin-gate p { color: var(--text2); font-size: .9rem; }
+  #pin-input {
+    font-size: 2rem; width: 140px; text-align: center;
+    background: var(--surface2); border: 2px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px;
+    letter-spacing: .4em;
+  }
+  #pin-input:focus { outline: none; border-color: var(--accent); }
+  #pin-submit {
+    background: var(--accent); color: #000; border: none;
+    font-size: 1rem; font-weight: 700; padding: 12px 32px;
+    border-radius: 8px; cursor: pointer;
+  }
+  #pin-error { color: var(--red); font-size: .9rem; min-height: 20px; }
+
+  /* ── App shell ── */
+  #app { display: none; }
+  #app.visible { display: block; }
+
+  /* ── Top bar ── */
+  #topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  #topbar h1 { font-size: 1.1rem; color: var(--accent); letter-spacing: .05em; }
+  #status-bar { display: flex; gap: 16px; font-size: .85rem; color: var(--text2); }
+  #status-bar span { color: var(--text); font-weight: 700; }
+
+  /* ── Tabs ── */
+  #tabs {
+    display: flex; border-bottom: 2px solid var(--border);
+    background: var(--surface);
+  }
+  .tab-btn {
+    padding: 12px 24px; background: none; border: none; color: var(--text2);
+    font-size: .95rem; cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: color .15s, border-color .15s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; padding: 16px; }
+  .tab-panel.active { display: block; }
+
+  /* ── NOW ENGRAVING banner ── */
+  #now-banner {
+    display: none;
+    background: linear-gradient(135deg, #14532d, #166534);
+    border: 2px solid var(--engraving-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  #now-banner.visible { display: block; }
+  #now-banner .banner-label {
+    font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+    color: #86efac; text-transform: uppercase; margin-bottom: 8px;
+  }
+  #now-banner .banner-main {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  #now-banner .banner-ticket {
+    font-size: 2.2rem; font-weight: 900; color: #fff;
+    line-height: 1;
+  }
+  #now-banner .banner-info {
+    flex: 1; min-width: 180px;
+  }
+  #now-banner .banner-name {
+    font-size: 1.4rem; font-weight: 700; color: #fff;
+  }
+  #now-banner .banner-item {
+    font-size: .95rem; color: #86efac; margin-top: 2px;
+  }
+  #now-banner .banner-elapsed {
+    font-size: 1.1rem; font-weight: 700; color: #fde047;
+    min-width: 60px; text-align: right;
+  }
+  #now-banner .banner-done {
+    background: var(--green); color: #000;
+    font-weight: 700; font-size: 1rem;
+    border: none; border-radius: 8px; padding: 12px 20px;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* ── Queue cards ── */
+  #queue-empty {
+    text-align: center; color: var(--text2);
+    padding: 60px 20px; font-size: 1rem;
+  }
+  .order-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .order-card.active-order {
+    border-color: var(--engraving-border);
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .card-ticket {
+    font-size: 1.5rem; font-weight: 900; color: var(--accent);
+    min-width: 52px;
+  }
+  .card-name { font-size: 1.1rem; font-weight: 700; }
+  .card-meta { font-size: .8rem; color: var(--text2); }
+  .card-time { font-size: .8rem; color: var(--text2); }
+  .all-done-btn {
+    background: var(--green); color: #000;
+    font-weight: 700; font-size: .85rem;
+    border: none; border-radius: 6px; padding: 8px 14px;
+    cursor: pointer;
+  }
+
+  /* ── Item rows ── */
+  .item-row {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .item-row:last-of-type { border-bottom: none; }
+  .item-index {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--border); color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .item-details { flex: 1; min-width: 0; }
+  .item-product { font-weight: 700; font-size: .95rem; }
+  .item-colour {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .85rem; color: var(--text2); margin-top: 3px;
+  }
+  .colour-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.2); flex-shrink: 0;
+  }
+  .item-text {
+    font-size: 1rem; margin-top: 4px; color: #fff;
+  }
+  .item-font {
+    font-size: .8rem; color: var(--text2); margin-top: 2px;
+  }
+  .item-qty {
+    font-size: .8rem; color: var(--text2);
+  }
+  .item-actions {
+    display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    align-items: flex-end;
+  }
+  .btn-start {
+    background: var(--blue); color: #fff;
+    font-weight: 700; font-size: .8rem;
+    border: none; border-radius: 6px; padding: 7px 14px;
+    cursor: pointer; white-space: nowrap;
+  }
+  .btn-svg {
+    background: var(--surface2); color: var(--text);
+    font-size: .8rem; border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 14px;
+    cursor: pointer; white-space: nowrap;
+  }
+  .btn-done {
+    background: var(--green); color: #000;
+    font-weight: 700; font-size: .8rem;
+    border: none; border-radius: 6px; padding: 7px 14px;
+    cursor: pointer; white-space: nowrap;
+  }
+  .btn-done:disabled {
+    opacity: .5; cursor: default;
+  }
+  .item-status-badge {
+    font-size: .75rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .status-waiting { background: #27272a; color: #a1a1aa; }
+  .status-engraving { background: #166534; color: #86efac; }
+  .status-done { background: #1c3a2e; color: #4ade80; }
+
+  /* ── Est. time picker (inline below Start) ── */
+  .time-picker {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+    display: none;
+  }
+  .time-picker.visible { display: block; }
+  .time-picker p { font-size: .8rem; color: var(--text2); margin-bottom: 8px; }
+  .time-presets { display: flex; gap: 6px; }
+  .time-preset-btn {
+    flex: 1; background: var(--surface);
+    border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 8px 0; cursor: pointer; font-size: .85rem;
+  }
+  .time-preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Products tab ── */
+  #products-panel { max-width: 700px; }
+  .product-list { margin-bottom: 28px; }
+  .product-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .product-item-name { font-weight: 700; flex: 1; }
+  .product-item-chars { font-size: .8rem; color: var(--text2); }
+  .colour-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .colour-chip {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.2);
+  }
+  .btn-delete-product {
+    background: none; border: 1px solid var(--red); color: var(--red);
+    border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: .8rem;
+  }
+  .add-product-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .add-product-form h3 { font-size: 1rem; margin-bottom: 16px; color: var(--accent); }
+  .form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .form-row label { font-size: .85rem; color: var(--text2); }
+  .form-row input, .form-row textarea, .form-row select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 9px 12px; font-size: .9rem;
+  }
+  .form-row input:focus, .form-row textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-row textarea { resize: vertical; min-height: 70px; font-family: inherit; }
+  .text-required-row { display: flex; align-items: center; gap: 10px; font-size: .9rem; }
+  .text-required-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .btn-save {
+    background: var(--accent); color: #000;
+    font-weight: 700; border: none; border-radius: 8px;
+    padding: 11px 24px; cursor: pointer; font-size: .9rem;
+  }
+  .btn-load-defaults {
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 11px 24px; cursor: pointer; font-size: .9rem;
+  }
+  .btn-load-defaults:hover { border-color: var(--accent); color: var(--accent); }
+  .save-status { font-size: .85rem; color: var(--green); min-height: 20px; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #27272a; color: #fff; padding: 10px 20px; border-radius: 8px;
+    font-size: .9rem; opacity: 0; pointer-events: none;
+    transition: opacity .3s; z-index: 100;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ── PIN gate ── -->
+<div id="pin-gate">
+  <h2>ITA Prints — Operator</h2>
+  <p>Enter your operator PIN to continue</p>
+  <input type="password" id="pin-input" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">
+  <button id="pin-submit">Unlock</button>
+  <p id="pin-error"></p>
+</div>
+
+<!-- ── App (hidden until PIN verified) ── -->
+<div id="app">
+  <div id="topbar">
+    <h1>ITA PRINTS — OPERATOR</h1>
+    <div id="status-bar">
+      Waiting: <span id="count-waiting">0</span>&nbsp;&nbsp;
+      Active: <span id="count-active">0</span>
+    </div>
+  </div>
+
+  <div id="tabs">
+    <button class="tab-btn active" data-tab="queue">Queue</button>
+    <button class="tab-btn" data-tab="products">Products</button>
+  </div>
+
+  <!-- ── Queue tab ── -->
+  <div id="queue-panel" class="tab-panel active" style="max-width:760px; margin:0 auto;">
+
+    <!-- NOW ENGRAVING banner -->
+    <div id="now-banner">
+      <div class="banner-label">▶ Now Engraving</div>
+      <div class="banner-main">
+        <div class="banner-ticket" id="banner-ticket">#001</div>
+        <div class="banner-info">
+          <div class="banner-name" id="banner-name">Loading…</div>
+          <div class="banner-item" id="banner-item"></div>
+        </div>
+        <div class="banner-elapsed" id="banner-elapsed">0:00</div>
+        <button class="banner-done" id="banner-done-btn">✓ Done — Call</button>
+      </div>
+    </div>
+
+    <div id="queue-empty" style="display:none;">No orders yet. Waiting for the first scan…</div>
+    <div id="order-list"></div>
+  </div>
+
+  <!-- ── Products tab ── -->
+  <div id="products-panel" class="tab-panel" style="margin:0 auto;">
+    <div class="product-list" id="product-list"></div>
+
+    <div class="add-product-form">
+      <h3>Add Product</h3>
+      <div class="form-row">
+        <label>Product name</label>
+        <input type="text" id="new-name" placeholder="e.g. Circle Leather Keychain">
+      </div>
+      <div class="form-row" style="flex-direction:row; gap:16px;">
+        <div style="flex:1;">
+          <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text2);">Max characters</label>
+          <input type="number" id="new-maxchars" min="1" max="50" value="12" style="width:100%;">
+        </div>
+        <div style="flex:1;">
+          <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text2);">Area (mm): W × H</label>
+          <div style="display:flex; gap:8px;">
+            <input type="number" id="new-area-w" min="10" max="200" value="50" placeholder="W">
+            <input type="number" id="new-area-h" min="10" max="200" value="25" placeholder="H">
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Colours available (one per line or comma-separated)</label>
+        <textarea id="new-colors" placeholder="Black&#10;Red&#10;Pink&#10;Navy"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="text-required-row">
+          <input type="checkbox" id="new-text-required" checked>
+          <label for="new-text-required">Text engraving required (hide if no text)</label>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-save" id="btn-add-product">Add Product</button>
+        <button class="btn-load-defaults" id="btn-load-defaults">Load ItaPrints Defaults</button>
+      </div>
+      <p class="save-status" id="save-status"></p>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Firebase config ──────────────────────────────────────────────────────────
+// Replace ALL values below with your actual Firebase project config
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyC1HIgTOv83mtrzrBTphvgEaqLOcrF2wg8",
+  authDomain:        "ita-prints-market-e52ae.firebaseapp.com",
+  databaseURL:       "https://ita-prints-market-e52ae-default-rtdb.firebaseio.com",
+  projectId:         "ita-prints-market-e52ae",
+  storageBucket:     "ita-prints-market-e52ae.firebasestorage.app",
+  messagingSenderId: "473198652493",
+  appId:             "1:473198652493:web:bb912d7b9e380ff1130004"
+};
+
+// ── Fonts (must match customer form exactly) ──────────────────────────────────
+const FONTS = [
+  { id:'arimo',           label:'Arimon',           webCSS:"'Arimo', sans-serif",        svgFamily:'Arimo' },
+  { id:'playfair',        label:'Playfair Display',  webCSS:"'Playfair Display', serif",  svgFamily:'Playfair Display' },
+  { id:'special-elite',   label:'Telegraph',         webCSS:"'Special Elite', cursive",   svgFamily:'Special Elite' },
+  { id:'libre-bodoni',    label:'Bodoni FLF',        webCSS:"'Libre Bodoni', serif",      svgFamily:'Libre Bodoni' },
+  { id:'yeseva',          label:'Yeseva One',        webCSS:"'Yeseva One', cursive",      svgFamily:'Yeseva One' },
+  { id:'arapey',          label:'Arapey',            webCSS:"'Arapey', serif",            svgFamily:'Arapey' },
+  { id:'satisfy',         label:'Apricots',          webCSS:"'Satisfy', cursive",         svgFamily:'Satisfy' },
+  { id:'grand-hotel',     label:'Grand Hotel',       webCSS:"'Grand Hotel', cursive",     svgFamily:'Grand Hotel' },
+  { id:'barlow',          label:'TT Drugs',          webCSS:"'Barlow', sans-serif",       svgFamily:'Barlow' },
+  { id:'lancelot',        label:'Lancelot',          webCSS:"'Lancelot', cursive",        svgFamily:'Lancelot' },
+  { id:'old-standard',    label:'Old Standard',      webCSS:"'Old Standard TT', serif",  svgFamily:'Old Standard TT' },
+  { id:'quicksand',       label:'Quick Sand',        webCSS:"'Quicksand', sans-serif",    svgFamily:'Quicksand' },
+];
+
+// ── Colour hex map ────────────────────────────────────────────────────────────
+const COLOUR_HEX = {
+  'Black':'#1a1a1a','Dark Brown':'#3d1f0a','Brown':'#6b3a1f','Tan':'#c4955a',
+  'Red':'#c0392b','Dark Red':'#8b0000','Pink':'#f48fb1','Purple':'#7b1fa2',
+  'Navy':'#1a237e','Dark Blue':'#0d47a1','Blue':'#1565c0','Green':'#2e7d32',
+  'White':'#f5f5f5','Grey':'#757575','Orange':'#e65100',
+  'Natural':'#d4b896','Natural Slate':'#4a4a5a','Natural Wood':'#c4955a',
+};
+
+// ── Default products (mirrors products-seed.json) ─────────────────────────────
+const DEFAULT_PRODUCTS = {
+  "leather-keychain":      { name:"Personalized Leather Keychain", maxChars:15, engravingArea:{w:50,h:25}, textRequired:true,  order:1,  colors:["Black","Dark Brown","Brown","Tan","Red","Pink","Purple","Navy","Green","White","Grey","Orange"] },
+  "custom-leather-keychain":{ name:"Custom Leather Keychain",       maxChars:15, engravingArea:{w:50,h:25}, textRequired:true,  order:2,  colors:["Black","Dark Brown","Brown","Tan","Red","Navy","Green"] },
+  "heart-keychain":        { name:"Heart Leather Keychain",         maxChars:10, engravingArea:{w:35,h:35}, textRequired:true,  order:3,  colors:["Black","Pink","Red","Purple","Brown","Tan","Navy","Green","White","Orange"] },
+  "circle-keychain":       { name:"Circle Leather Keychain",        maxChars:10, engravingArea:{w:35,h:35}, textRequired:true,  order:4,  colors:["Red","Black","Pink","Purple","Brown","Tan","Navy","Green","White","Orange"] },
+  "cat-paw-organizer":     { name:"Cat Paw Cable Organizer",        maxChars:10, engravingArea:{w:40,h:20}, textRequired:false, order:5,  colors:["Red","Black","Orange","Green"] },
+  "heart-lip-balm":        { name:"Heart Lip Balm Holder",          maxChars:10, engravingArea:{w:30,h:35}, textRequired:true,  order:6,  colors:["Black","Red","Pink","Purple","Brown","Tan","Navy"] },
+  "lip-balm-bag-charm":    { name:"Lip Balm Bag Charm",             maxChars:12, engravingArea:{w:40,h:20}, textRequired:true,  order:7,  colors:["Red","Black","Pink","Purple","Brown","Tan","Navy"] },
+  "slim-wallet":           { name:"Personalized Slim Wallet",       maxChars:20, engravingArea:{w:80,h:20}, textRequired:true,  order:8,  colors:["Dark Blue","Black","Dark Brown","Brown","Tan","Red","Navy","Green","White","Grey"] },
+  "luggage-tag":           { name:"Personalized Luggage Tag",       maxChars:18, engravingArea:{w:60,h:40}, textRequired:true,  order:9,  colors:["Pink","Black","Dark Brown","Brown","Tan","Red","Purple","Navy","Green","White","Grey"] },
+  "slate-coaster":         { name:"Slate Coaster",                  maxChars:25, engravingArea:{w:90,h:90}, textRequired:true,  order:10, colors:["Natural Slate"] },
+  "wood-bottle-opener":    { name:"Wood Bottle Opener",             maxChars:12, engravingArea:{w:55,h:15}, textRequired:false, order:11, colors:["Natural Wood"] },
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let db;
+let orders = {};           // orderId → order object
+let products = {};         // productId → product object
+let elapsedInterval = null;
+let activeOrderId = null;  // the order currently in the NOW ENGRAVING banner
+let activeItemId = null;   // itemId of the currently engraving item
+let bannerStartedAt = null;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function toast(msg, duration = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function formatElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s/60)}:${pad(s%60)}`;
+}
+
+// ── SVG generation ────────────────────────────────────────────────────────────
+function buildSVG(item, ticket, customerName) {
+  const { w, h } = item.engravingArea || { w:50, h:25 };
+  const text    = item.text || '';
+  const font    = item.fontSvgFamily || 'Arial';
+  const fs      = Math.min(h * 0.55, w * 0.18, 14);
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="${w}mm" height="${h}mm"
+     viewBox="0 0 ${w} ${h}">
+  <text
+    x="${w/2}" y="${h/2}"
+    dominant-baseline="middle"
+    text-anchor="middle"
+    font-family="${font}"
+    font-size="${fs}"
+    fill="#000000"
+  >${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</text>
+</svg>`;
+}
+
+function downloadSVG(item, ticket, customerName, itemIndex) {
+  const svg  = buildSVG(item, ticket, customerName);
+  const slug = (item.productName || 'item').replace(/\s+/g,'_');
+  const name = `#${String(ticket).padStart(3,'0')}-${customerName}-item${itemIndex+1}-${slug}.svg`;
+  const blob = new Blob([svg], { type:'image/svg+xml' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Banner ────────────────────────────────────────────────────────────────────
+function startBanner(orderId, itemId, order, item) {
+  activeOrderId  = orderId;
+  activeItemId   = itemId;
+  bannerStartedAt = order._startedAt || Date.now();
+
+  document.getElementById('banner-ticket').textContent = `#${String(order.ticket).padStart(3,'0')}`;
+  document.getElementById('banner-name').textContent   = order.customerName;
+  document.getElementById('banner-item').textContent   =
+    `${item.productName} — ${item.color}${item.text ? ' · "' + item.text + '"' : ''}`;
+  document.getElementById('banner-done-btn').textContent = `✓ Done — Call ${order.customerName}`;
+  document.getElementById('now-banner').classList.add('visible');
+
+  clearInterval(elapsedInterval);
+  elapsedInterval = setInterval(() => {
+    document.getElementById('banner-elapsed').textContent =
+      formatElapsed(Date.now() - bannerStartedAt);
+  }, 1000);
+}
+
+function clearBanner() {
+  activeOrderId = null;
+  activeItemId  = null;
+  bannerStartedAt = null;
+  clearInterval(elapsedInterval);
+  document.getElementById('now-banner').classList.remove('visible');
+}
+
+// ── Render queue ──────────────────────────────────────────────────────────────
+function renderQueue() {
+  const list = document.getElementById('order-list');
+  const empty = document.getElementById('queue-empty');
+
+  const active = Object.entries(orders)
+    .filter(([,o]) => o.status !== 'done')
+    .sort(([,a],[,b]) => a.ticket - b.ticket);
+
+  let waiting = 0, engraving = 0;
+  active.forEach(([,o]) => {
+    if (o.status === 'waiting' || o.status === 'partial') waiting++;
+    if (o.status === 'engraving') engraving++;
+  });
+  document.getElementById('count-waiting').textContent  = waiting;
+  document.getElementById('count-active').textContent   = engraving;
+
+  if (active.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    clearBanner();
+    return;
+  }
+  empty.style.display = 'none';
+
+  // restore banner for any active engraving item
+  let bannerRestored = false;
+  active.forEach(([oid, o]) => {
+    if (o.status === 'engraving' && !bannerRestored) {
+      const engItem = (o.items||[]).find(it => it.status === 'engraving');
+      if (engItem) { startBanner(oid, engItem.itemId, o, engItem); bannerRestored = true; }
+    }
+  });
+  if (!bannerRestored) clearBanner();
+
+  list.innerHTML = '';
+  active.forEach(([orderId, order]) => {
+    const items   = order.items || [];
+    const allDone = items.every(it => it.status === 'done');
+    const card    = document.createElement('div');
+    card.className = `order-card${order.status === 'engraving' ? ' active-order' : ''}`;
+    card.dataset.orderId = orderId;
+
+    const itemsHTML = items.map((item, idx) => {
+      const hex       = COLOUR_HEX[item.color] || '#888';
+      const statusCls = item.status === 'done' ? 'status-done' :
+                        item.status === 'engraving' ? 'status-engraving' : 'status-waiting';
+      const statusLbl = item.status === 'done' ? 'Done' :
+                        item.status === 'engraving' ? 'Engraving' : 'Waiting';
+      const isEngraving = item.status === 'engraving';
+      const isDone      = item.status === 'done';
+
+      return `
+      <div class="item-row" data-item-id="${item.itemId}">
+        <div class="item-index">${idx+1}</div>
+        <div class="item-details">
+          <div class="item-product">${item.productName}${item.qty > 1 ? ` ×${item.qty}` : ''}</div>
+          <div class="item-colour">
+            <span class="colour-dot" style="background:${hex};"></span>
+            ${item.color}
+          </div>
+          ${item.text ? `<div class="item-text">&ldquo;${item.text}&rdquo;</div>` : ''}
+          ${item.fontLabel ? `<div class="item-font" style="font-family:${item.fontCSS}">${item.fontLabel}</div>` : ''}
+        </div>
+        <div class="item-actions">
+          <span class="item-status-badge ${statusCls}">${statusLbl}</span>
+          ${!isEngraving && !isDone ? `<button class="btn-start" onclick="onStart('${orderId}','${item.itemId}')">▶ Start</button>` : ''}
+          <button class="btn-svg" onclick="onSVG('${orderId}','${item.itemId}')">↓ SVG</button>
+          ${isEngraving ? `<button class="btn-done" onclick="onItemDone('${orderId}','${item.itemId}')">✓ Done</button>` : ''}
+          ${isDone ? `<button class="btn-done" disabled>✓ Done</button>` : ''}
+          <div class="time-picker" id="tp-${orderId}-${item.itemId}">
+            <p>Est. ready in:</p>
+            <div class="time-presets">
+              <button class="time-preset-btn" onclick="onSetTime('${orderId}','${item.itemId}',5)">+5 min</button>
+              <button class="time-preset-btn" onclick="onSetTime('${orderId}','${item.itemId}',10)">+10 min</button>
+              <button class="time-preset-btn" onclick="onSetTime('${orderId}','${item.itemId}',15)">+15 min</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-ticket">#${String(order.ticket).padStart(3,'0')}</div>
+        <div>
+          <div class="card-name">${order.customerName}</div>
+          <div class="card-meta">${items.length} item${items.length!==1?'s':''} · ${new Date(order.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="flex:1"></div>
+        ${allDone
+          ? `<button class="all-done-btn" onclick="onOrderDone('${orderId}')">✓ All Done — Call ${order.customerName}</button>`
+          : ''}
+      </div>
+      ${itemsHTML}
+    `;
+    list.appendChild(card);
+  });
+}
+
+// ── Item actions ──────────────────────────────────────────────────────────────
+function onStart(orderId, itemId) {
+  // Show the time picker below the Start button
+  const tp = document.getElementById(`tp-${orderId}-${itemId}`);
+  if (tp) tp.classList.toggle('visible');
+}
+
+async function onSetTime(orderId, itemId, mins) {
+  const order    = orders[orderId];
+  if (!order) return;
+
+  const estTime  = Date.now() + mins * 60 * 1000;
+  const now      = Date.now();
+  const itemIdx  = (order.items||[]).findIndex(it => it.itemId === itemId);
+  if (itemIdx < 0) return;
+
+  const item = order.items[itemIdx];
+
+  // Update item status to engraving + set est. ready time + record start time
+  const updates = {};
+  updates[`/orders/${orderId}/status`]                                    = 'engraving';
+  updates[`/orders/${orderId}/estReadyTime`]                              = estTime;
+  updates[`/orders/${orderId}/_startedAt`]                                = now;
+  updates[`/orders/${orderId}/items/${itemIdx}/status`]                   = 'engraving';
+
+  await db.ref().update(updates);
+
+  // Auto-download SVG
+  downloadSVG(item, order.ticket, order.customerName, itemIdx);
+
+  // Hide time picker
+  const tp = document.getElementById(`tp-${orderId}-${itemId}`);
+  if (tp) tp.classList.remove('visible');
+
+  toast(`SVG downloaded — est. ready in ${mins} min`);
+}
+
+function onSVG(orderId, itemId) {
+  const order = orders[orderId];
+  if (!order) return;
+  const item = (order.items||[]).find(it => it.itemId === itemId);
+  if (!item) return;
+  const idx = (order.items||[]).findIndex(it => it.itemId === itemId);
+  downloadSVG(item, order.ticket, order.customerName, idx);
+  toast('SVG downloaded');
+}
+
+async function onItemDone(orderId, itemId) {
+  const order   = orders[orderId];
+  if (!order) return;
+  const itemIdx = (order.items||[]).findIndex(it => it.itemId === itemId);
+  if (itemIdx < 0) return;
+
+  const updates = {};
+  updates[`/orders/${orderId}/items/${itemIdx}/status`] = 'done';
+
+  // Check if all items done
+  const allDoneAfter = (order.items||[]).every((it, i) =>
+    i === itemIdx ? true : it.status === 'done'
+  );
+  if (allDoneAfter) {
+    updates[`/orders/${orderId}/status`] = 'ready';
+  } else {
+    updates[`/orders/${orderId}/status`] = 'partial';
+  }
+
+  await db.ref().update(updates);
+  clearBanner();
+  toast('Item marked done');
+}
+
+async function onOrderDone(orderId) {
+  await db.ref(`/orders/${orderId}/status`).set('done');
+  clearBanner();
+  toast('Order complete — customer called!');
+}
+
+// Banner done button
+document.getElementById('banner-done-btn').addEventListener('click', () => {
+  if (activeOrderId && activeItemId) onItemDone(activeOrderId, activeItemId);
+});
+
+// ── Products tab ──────────────────────────────────────────────────────────────
+function renderProducts() {
+  const list = document.getElementById('product-list');
+  const entries = Object.entries(products).sort(([,a],[,b]) => (a.order||99)-(b.order||99));
+
+  if (entries.length === 0) {
+    list.innerHTML = '<p style="color:var(--text2); margin-bottom:16px;">No products yet. Add one below or load the ItaPrints defaults.</p>';
+    return;
+  }
+
+  list.innerHTML = entries.map(([id, p]) => {
+    const chips = (p.colors||[]).map(c =>
+      `<span class="colour-chip" style="background:${COLOUR_HEX[c]||'#888'};" title="${c}"></span>`
+    ).join('');
+    return `
+    <div class="product-item">
+      <div class="product-item-name">${p.name}</div>
+      <div class="product-item-chars">${p.maxChars} chars · ${p.engravingArea?.w}×${p.engravingArea?.h}mm</div>
+      <div class="colour-chips">${chips}</div>
+      <button class="btn-delete-product" onclick="deleteProduct('${id}')">Delete</button>
+    </div>`;
+  }).join('');
+}
+
+async function deleteProduct(id) {
+  if (!confirm(`Delete "${products[id]?.name}"?`)) return;
+  await db.ref(`/products/${id}`).remove();
+  toast('Product deleted');
+}
+
+document.getElementById('btn-add-product').addEventListener('click', async () => {
+  const name     = document.getElementById('new-name').value.trim();
+  const maxChars = parseInt(document.getElementById('new-maxchars').value) || 12;
+  const areaW    = parseInt(document.getElementById('new-area-w').value)   || 50;
+  const areaH    = parseInt(document.getElementById('new-area-h').value)   || 25;
+  const colorsRaw= document.getElementById('new-colors').value;
+  const textReq  = document.getElementById('new-text-required').checked;
+
+  if (!name) { toast('Please enter a product name'); return; }
+
+  const colors = colorsRaw
+    .split(/[\n,]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  const order = Object.keys(products).length + 1;
+
+  const statusEl = document.getElementById('save-status');
+  statusEl.textContent = 'Saving…';
+
+  await db.ref(`/products/${slug}`).set({
+    name, maxChars, engravingArea:{w:areaW,h:areaH}, textRequired:textReq, order, colors
+  });
+
+  // Clear form
+  document.getElementById('new-name').value    = '';
+  document.getElementById('new-colors').value  = '';
+  document.getElementById('new-maxchars').value = '12';
+  document.getElementById('new-area-w').value  = '50';
+  document.getElementById('new-area-h').value  = '25';
+  document.getElementById('new-text-required').checked = true;
+
+  statusEl.textContent = '✓ Saved!';
+  setTimeout(() => statusEl.textContent = '', 3000);
+  toast(`"${name}" added`);
+});
+
+document.getElementById('btn-load-defaults').addEventListener('click', async () => {
+  if (!confirm('This will overwrite any existing products with the ItaPrints defaults. Continue?')) return;
+  const statusEl = document.getElementById('save-status');
+  statusEl.textContent = 'Loading defaults…';
+  await db.ref('/products').set(DEFAULT_PRODUCTS);
+  statusEl.textContent = '✓ Defaults loaded!';
+  setTimeout(() => statusEl.textContent = '', 3000);
+  toast('ItaPrints defaults loaded');
+});
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab + '-panel').classList.add('active');
+  });
+});
+
+// ── PIN gate ──────────────────────────────────────────────────────────────────
+async function initApp() {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.database();
+
+  // Subscribe to products
+  db.ref('/products').on('value', snap => {
+    products = snap.val() || {};
+    renderProducts();
+  });
+
+  // Subscribe to orders
+  db.ref('/orders').orderByChild('ticket').on('value', snap => {
+    orders = {};
+    snap.forEach(child => { orders[child.key] = child.val(); });
+    renderQueue();
+  });
+}
+
+async function verifyPin(enteredPin) {
+  const snap = await db.ref('/config/pin').once('value');
+  const stored = snap.val();
+  if (!stored) {
+    // No PIN set yet — accept any 4+ char PIN and save it
+    if (enteredPin.length >= 4) {
+      await db.ref('/config/pin').set(enteredPin);
+      return true;
+    }
+    return false;
+  }
+  return String(stored) === String(enteredPin);
+}
+
+document.getElementById('pin-submit').addEventListener('click', attemptPin);
+document.getElementById('pin-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') attemptPin();
+});
+
+async function attemptPin() {
+  const pin = document.getElementById('pin-input').value.trim();
+  if (!pin) return;
+
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+  } catch(e) {
+    // already initialized — ignore
+  }
+  db = firebase.database();
+
+  const ok = await verifyPin(pin);
+  if (ok) {
+    sessionStorage.setItem('operator-pin', pin);
+    document.getElementById('pin-gate').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
+  } else {
+    document.getElementById('pin-error').textContent = 'Incorrect PIN. Try again.';
+    document.getElementById('pin-input').value = '';
+  }
+}
+
+// Check cached PIN on load
+(async function() {
+  const cached = sessionStorage.getItem('operator-pin');
+  if (cached) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    } catch(e) {}
+    db = firebase.database();
+    const ok = await verifyPin(cached);
+    if (ok) {
+      document.getElementById('pin-gate').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      initApp();
+    }
+  }
+})();
+</script>
+</body>
+</html>

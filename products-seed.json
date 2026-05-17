@@ -1,0 +1,90 @@
+{
+  "leather-keychain": {
+    "name": "Personalized Leather Keychain",
+    "maxChars": 15,
+    "engravingArea": { "w": 50, "h": 25 },
+    "textRequired": true,
+    "order": 1,
+    "colors": ["Black","Dark Brown","Brown","Tan","Red","Pink","Purple","Navy","Green","White","Grey","Orange"]
+  },
+  "custom-leather-keychain": {
+    "name": "Custom Leather Keychain",
+    "maxChars": 15,
+    "engravingArea": { "w": 50, "h": 25 },
+    "textRequired": true,
+    "order": 2,
+    "colors": ["Black","Dark Brown","Brown","Tan","Red","Navy","Green"]
+  },
+  "heart-keychain": {
+    "name": "Heart Leather Keychain",
+    "maxChars": 10,
+    "engravingArea": { "w": 35, "h": 35 },
+    "textRequired": true,
+    "order": 3,
+    "colors": ["Black","Pink","Red","Purple","Brown","Tan","Navy","Green","White","Orange"]
+  },
+  "circle-keychain": {
+    "name": "Circle Leather Keychain",
+    "maxChars": 10,
+    "engravingArea": { "w": 35, "h": 35 },
+    "textRequired": true,
+    "order": 4,
+    "colors": ["Red","Black","Pink","Purple","Brown","Tan","Navy","Green","White","Orange"]
+  },
+  "cat-paw-organizer": {
+    "name": "Cat Paw Cable Organizer",
+    "maxChars": 10,
+    "engravingArea": { "w": 40, "h": 20 },
+    "textRequired": false,
+    "order": 5,
+    "colors": ["Red","Black","Orange","Green"]
+  },
+  "heart-lip-balm": {
+    "name": "Heart Lip Balm Holder",
+    "maxChars": 10,
+    "engravingArea": { "w": 30, "h": 35 },
+    "textRequired": true,
+    "order": 6,
+    "colors": ["Black","Red","Pink","Purple","Brown","Tan","Navy"]
+  },
+  "lip-balm-bag-charm": {
+    "name": "Lip Balm Bag Charm",
+    "maxChars": 12,
+    "engravingArea": { "w": 40, "h": 20 },
+    "textRequired": true,
+    "order": 7,
+    "colors": ["Red","Black","Pink","Purple","Brown","Tan","Navy"]
+  },
+  "slim-wallet": {
+    "name": "Personalized Slim Wallet",
+    "maxChars": 20,
+    "engravingArea": { "w": 80, "h": 20 },
+    "textRequired": true,
+    "order": 8,
+    "colors": ["Dark Blue","Black","Dark Brown","Brown","Tan","Red","Navy","Green","White","Grey"]
+  },
+  "luggage-tag": {
+    "name": "Personalized Luggage Tag",
+    "maxChars": 18,
+    "engravingArea": { "w": 60, "h": 40 },
+    "textRequired": true,
+    "order": 9,
+    "colors": ["Pink","Black","Dark Brown","Brown","Tan","Red","Purple","Navy","Green","White","Grey"]
+  },
+  "slate-coaster": {
+    "name": "Slate Coaster",
+    "maxChars": 25,
+    "engravingArea": { "w": 90, "h": 90 },
+    "textRequired": true,
+    "order": 10,
+    "colors": ["Natural Slate"]
+  },
+  "wood-bottle-opener": {
+    "name": "Wood Bottle Opener",
+    "maxChars": 12,
+    "engravingArea": { "w": 55, "h": 15 },
+    "textRequired": false,
+    "order": 11,
+    "colors": ["Natural Wood"]
+  }
+}
