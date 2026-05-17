@@ -365,7 +365,7 @@ function shapeSVG(productId, area, colour, text, font, fillOverride, inkOverride
     const fs = Math.min(15, (76*0.85)/(chars*0.55)).toFixed(1);
     return `<svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
   <path d="M50,80 C18,60 2,46 2,30 C2,14 14,6 27,6 C37,6 45,11 50,18 C55,11 63,6 73,6 C86,6 98,14 98,30 C98,46 82,60 50,80Z" fill="${fill}"/>
-  ${svgText(50,52,fs,font,ink,text)}
+  ${svgText(50,44,fs,font,ink,text)}
 </svg>`;
   }
 
@@ -382,19 +382,20 @@ function shapeSVG(productId, area, colour, text, font, fillOverride, inkOverride
     const fs = Math.min(9, (60*0.82)/(chars*0.55)).toFixed(1);
     // Strap drawn first so paw ovals overlap it naturally
     // Left paw: wide oval centred at (27,18), 3 toe circles pointing LEFT
+    // Middle toe cx=5 so it sits flush at the left edge (5-r=0), outer toes cx=8
     const leftPaw = `
   <ellipse cx="27" cy="18" rx="20" ry="16" fill="${fill}"/>
-  <circle  cx="6"  cy="10" r="5" fill="${fill}"/>
-  <circle  cx="3"  cy="18" r="5" fill="${fill}"/>
-  <circle  cx="6"  cy="26" r="5" fill="${fill}"/>
+  <circle  cx="8"  cy="10" r="5" fill="${fill}"/>
+  <circle  cx="5"  cy="18" r="5" fill="${fill}"/>
+  <circle  cx="8"  cy="26" r="5" fill="${fill}"/>
   <circle  cx="27" cy="18" r="5"   fill="rgba(0,0,0,0.16)"/>
   <circle  cx="27" cy="18" r="3.2" fill="rgba(210,165,40,0.92)"/>`;
-    // Right paw: mirror at (123,18), toes pointing RIGHT
+    // Right paw: mirror at (123,18), middle toe cx=145 flush at right edge (145+r=150)
     const rightPaw = `
   <ellipse cx="123" cy="18" rx="20" ry="16" fill="${fill}"/>
-  <circle  cx="144" cy="10" r="5" fill="${fill}"/>
-  <circle  cx="147" cy="18" r="5" fill="${fill}"/>
-  <circle  cx="144" cy="26" r="5" fill="${fill}"/>
+  <circle  cx="142" cy="10" r="5" fill="${fill}"/>
+  <circle  cx="145" cy="18" r="5" fill="${fill}"/>
+  <circle  cx="142" cy="26" r="5" fill="${fill}"/>
   <circle  cx="123" cy="18" r="5"   fill="rgba(0,0,0,0.16)"/>
   <circle  cx="123" cy="18" r="3.2" fill="rgba(210,165,40,0.92)"/>`;
     return `<svg viewBox="0 0 150 36" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
