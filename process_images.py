@@ -1,7 +1,7 @@
 """
 Remove backgrounds from product photos and save as 400x400 transparent PNGs
 for the market-app tile previews.
-Run once: python3 process_images.py
+Run once: python3 process_images.py PHOTOS_DIR
 """
 
 import io, os, sys
@@ -13,14 +13,14 @@ try:
 except ImportError:
     sys.exit("Missing deps — run: pip3 install rembg onnxruntime Pillow")
 
-PHOTOS  = Path("photos")
-PHOTOS   = Path("photos")
+# Folder holding the product photo folders; pass it on the command line: python3 process_images.py PHOTOS_DIR
+PHOTOS  = Path(sys.argv[1]).expanduser() if len(sys.argv) > 1 else Path("photos")
 OUTPUT  = Path(__file__).parent / "images"
 OUTPUT.mkdir(exist_ok=True)
 
 PHOTOS = {
     'leather-keychain':       PHOTOS / "Small leather keychains/IMG_1138.JPG",
-    'custom-leather-keychain':PHOTOS  / "Leather Keychain/IMG_3191.jpg",
+    'custom-leather-keychain':PHOTOS / "Leather Keychain/IMG_3191.jpg",
     'heart-keychain':         PHOTOS / "Heart Mirrors/IMG_4705.jpg",
     'mini-heart-keychain':    PHOTOS / "Heart Mirrors/IMG_4733.JPG",
     'circle-keychain':        PHOTOS / "Circle Mirrors/IMG_5119.JPG",
